@@ -1,0 +1,18 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY app/web/package*.json ./
+RUN npm install --legacy-peer-deps
+
+COPY app/web/ .
+
+# Set environment variable for the API URL
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

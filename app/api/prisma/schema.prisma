@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(cuid())
+  email      String      @unique
+  password   String
+  plan       Plan        @default(FREE)
+  leadsUsed  Int         @default(0)
+  leadsLimit Int         @default(100)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  scrapeJobs ScrapeJob[]
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+model ScrapeJob {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id])
+  city       String
+  category   String
+  limit      Int
+  status     JobStatus  @default(PENDING)
+  createdAt  DateTime   @default(now())
+  businesses Business[]
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model Business {
+  id          String    @id @default(cuid())
+  scrapeJobId String
+  scrapeJob   ScrapeJob @relation(fields: [scrapeJobId], references: [id])
+  name        String
+  phone       String?
+  address     String?
+  website     String?
+  domainAge   Int?
+  email       String?
+  owner       String?
+  employeeCount String?
+  revenue     String?
+  score       Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@unique([phone, website])
+}
