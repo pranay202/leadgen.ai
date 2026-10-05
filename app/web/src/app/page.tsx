@@ -15,5 +15,5 @@ export default function RootPage() {
     }
   }, [router]);
 
-  return <div className="min-h-screen flex items-center justify-center text-indigo-600 font-bold">OfflineBizFinder</div>;
+  return <div className="flex min-h-screen items-center justify-center bg-slate-50 font-bold text-slate-900">OfflineBizFinder</div>;
 }

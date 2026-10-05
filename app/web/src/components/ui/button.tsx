@@ -10,11 +10,11 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', loading, children, ...props }, ref) => {
     const variants = {
-      primary: 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm',
-      secondary: 'bg-white text-gray-900 border border-gray-200 hover:bg-gray-50',
-      outline: 'bg-transparent border border-indigo-600 text-indigo-600 hover:bg-indigo-50',
-      ghost: 'bg-transparent text-gray-600 hover:bg-gray-100',
-      danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+      primary: 'bg-slate-900 text-white shadow-lg shadow-slate-900/15 hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-xl hover:shadow-slate-900/20',
+      secondary: 'bg-white text-slate-800 border border-slate-200 shadow-sm hover:border-slate-300 hover:bg-slate-50',
+      outline: 'bg-transparent border border-cyan-600 text-cyan-700 hover:bg-cyan-50',
+      ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+      danger: 'bg-rose-600 text-white shadow-sm hover:bg-rose-700',
     };
 
     const sizes = {
@@ -28,7 +28,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+          'inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0',
           variants[variant],
           sizes[size],
           className

@@ -44,7 +44,7 @@ export default function JobResultsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50">
       <Navbar />
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-6">
@@ -79,7 +79,7 @@ export default function JobResultsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900 font-medium">{biz.phone || '-'}</div>
-                      <div className="text-xs text-indigo-600 flex items-center">
+                      <div className="flex items-center text-xs text-cyan-700">
                          <Mail className="w-3 h-3 mr-1" /> {biz.email || 'Email missing'}
                       </div>
                     </td>
@@ -93,7 +93,7 @@ export default function JobResultsPage() {
                     <td className="px-6 py-4">
                       {biz.website ? (
                         <div className="flex flex-col">
-                          <a href={biz.website} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline flex items-center text-sm">
+                          <a href={biz.website} target="_blank" rel="noreferrer" className="flex items-center text-sm text-cyan-700 hover:underline">
                             <Globe className="w-3 h-3 mr-1" /> Visit <ExternalLink className="w-3 h-3 ml-1" />
                           </a>
                           <span className="text-xs text-gray-400">Age: {biz.domainAge ?? 'N/A'} yrs</span>

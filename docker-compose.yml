@@ -24,6 +24,7 @@ services:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/offlinebizfinder?schema=public
       - JWT_SECRET=supersecretjwtkey
       - PORT=3001
+      - GOOGLE_MAPS_API_KEY=AIzaSyBZO_ADILi_1-cUVYMzIpmHKuZzEM72dYw
     ports:
       - "3001:3001"
     depends_on:
