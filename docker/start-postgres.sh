@@ -9,8 +9,8 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
     # Start temporary postgres to create user and database
     pg_ctl -D "$PGDATA" -o "-c listen_addresses=''" -w start
     
-    psql --command "CREATE USER postgres WITH SUPERUSER PASSWORD 'postgres';"
-    createdb -O postgres offlinebizfinder
+    psql --command "ALTER USER postgres WITH SUPERUSER PASSWORD 'postgres';"
+    psql --command "SELECT 'CREATE DATABASE offlinebizfinder OWNER postgres' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'offlinebizfinder')\gexec"
     
     pg_ctl -D "$PGDATA" -m fast -w stop
 fi

@@ -1,5 +1,27 @@
 # Go Gin + MongoDB Boilerplate — Walkthrough
 
+## One-command Docker deployment
+
+The complete app is published as one image. The image includes the web app, API,
+PostgreSQL, migrations, and an Nginx reverse proxy, so a new server only needs
+Docker installed:
+
+```bash
+docker run -d --name leadgen \
+  --restart unless-stopped \
+  -p 80:80 \
+  -v leadgen-data:/var/lib/postgresql/data \
+  -e JWT_SECRET='replace-with-a-long-random-secret' \
+  ghcr.io/pranay202/leadgen.ai:latest
+```
+
+Open `http://SERVER_IP/`. The database survives container replacement in the
+`leadgen-data` volume. Set `GOOGLE_MAPS_API_KEY` with another `-e` flag if the
+Google Maps scraper is needed; the Crawlee scraper works without it.
+
+The `main` branch is built and pushed to GHCR automatically by
+`.github/workflows/publish-docker.yml`.
+
 ## What Was Built
 
 A production-grade, fully scaffolded REST API in Go using **Gin** + **MongoDB**, following **Hexagonal Architecture** with a layered handler → service → repository pattern.
