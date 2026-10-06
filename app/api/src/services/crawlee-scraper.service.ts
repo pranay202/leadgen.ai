@@ -3,7 +3,10 @@ import { isIP } from 'net';
 import { CheerioCrawler, RequestQueue } from 'crawlee';
 import type { ScrapeResult } from './scraper.service';
 
-const RESULTS_PER_SEARCH_PAGE = 50;
+// Bing commonly returns only 10 organic results even when `count=50` is
+// requested. Using 50 here made every small Crawlee job stop at 10 leads
+// because only one search page was discovered.
+const RESULTS_PER_SEARCH_PAGE = 10;
 const BLOCKED_HOSTS = [
   'bing.com',
   'google.com',

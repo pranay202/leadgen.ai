@@ -5,7 +5,7 @@ import { api } from '@/lib/api';
 import { Navbar } from '@/components/ui/navbar';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Users, CreditCard, Clock, ChevronRight } from 'lucide-react';
+import { Users, CreditCard, Clock, ChevronRight, Trash2 } from 'lucide-react';
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -24,6 +24,18 @@ export default function DashboardPage() {
       alert(err.response?.data?.error || 'Upgrade failed');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (job: any) => {
+    if (job.status !== 'COMPLETED') return;
+    if (!window.confirm(`Delete the completed scrape for ${job.category} in ${job.city}? This cannot be undone.`)) return;
+
+    try {
+      await api.delete(`/jobs/${job.id}`);
+      setJobs((current) => current.filter((item) => item.id !== job.id));
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Could not delete this scrape');
     }
   };
 
@@ -51,8 +63,8 @@ export default function DashboardPage() {
   }
 
   const stats = [
-    { name: 'Total Leads Found', value: user?.leadsUsed || 0, icon: Users },
-    { name: 'Remaining Quota', value: (user?.leadsLimit || 0) - (user?.leadsUsed || 0), icon: Clock },
+    { name: 'Google Maps Leads Used', value: user?.leadsUsed || 0, icon: Users },
+    { name: 'Google Maps Quota Left', value: (user?.leadsLimit || 0) - (user?.leadsUsed || 0), icon: Clock },
     { name: 'Plan', value: user?.plan || 'FREE', icon: CreditCard },
   ];
 
@@ -104,11 +116,25 @@ export default function DashboardPage() {
                         <span className="text-sm font-medium text-slate-900">{job.category} in {job.city}</span>
                         <span className="text-xs text-slate-500">{new Date(job.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <Link href={`/jobs/${job.id}`}>
-                        <Button variant="ghost" size="sm">
-                          View results <ChevronRight className="ml-2 w-4 h-4" />
-                        </Button>
-                      </Link>
+                      <div className="flex items-center gap-1">
+                        <Link href={`/jobs/${job.id}`}>
+                          <Button variant="ghost" size="sm">
+                            View results <ChevronRight className="ml-2 w-4 h-4" />
+                          </Button>
+                        </Link>
+                        {job.status === 'COMPLETED' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                            onClick={() => handleDelete(job)}
+                            aria-label={`Delete ${job.category} in ${job.city}`}
+                            title="Delete completed scrape"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </li>
                 ))}

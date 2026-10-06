@@ -27,7 +27,10 @@ export const createScrapeJob = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (user.leadsUsed + limit > user.leadsLimit) {
+    // The account quota is for Google Maps API usage only. Crawlee is an
+    // independent public-web scraper and must remain available regardless of
+    // the user's Google Maps allowance.
+    if (scraper === 'GOOGLE_MAPS' && user.leadsUsed + limit > user.leadsLimit) {
       console.warn(`LIMIT EXCEEDED: used=${user.leadsUsed}, limit=${user.leadsLimit}, requested=${limit}`);
       return res.status(403).json({ error: 'Usage limit exceeded' });
     }
@@ -55,17 +58,74 @@ export const createScrapeJob = async (req: Request, res: Response) => {
 
 export const getJobResults = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const userId = (req as any).userId;
+  const requestedPage = Number(req.query.page ?? 1);
+  const requestedPageSize = Number(req.query.pageSize ?? 25);
+  const page = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const pageSize = Number.isInteger(requestedPageSize) && requestedPageSize > 0
+    ? Math.min(requestedPageSize, 100)
+    : 25;
+
   try {
     const job = await prisma.scrapeJob.findUnique({
-      where: { id },
-      include: { businesses: true },
+      where: { id, userId },
+      include: {
+        businesses: {
+          orderBy: { createdAt: 'asc' },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        },
+        _count: { select: { businesses: true } },
+      },
     });
     if (!job) return res.status(404).json({ error: 'Job not found' });
-    res.json(job);
+
+    const { _count, ...jobData } = job;
+    res.json({
+      ...jobData,
+      pagination: {
+        page,
+        pageSize,
+        total: _count.businesses,
+        pageCount: Math.ceil(_count.businesses / pageSize),
+      },
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const deleteCompletedJob = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userId = (req as any).userId;
+
+  try {
+    // Businesses use a restrictive foreign key, so remove the child rows in
+    // the same transaction before removing the completed job itself.
+    const deleted = await prisma.$transaction(async (tx) => {
+      const job = await tx.scrapeJob.findFirst({
+        where: { id, userId, status: 'COMPLETED' },
+        select: { id: true },
+      });
+
+      if (!job) return false;
+
+      await tx.business.deleteMany({ where: { scrapeJobId: job.id } });
+      await tx.scrapeJob.delete({ where: { id: job.id } });
+      return true;
+    });
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Completed job not found' });
+    }
+
+    res.status(204).send();
+  } catch (error: any) {
+    console.error('DELETE JOB ERROR:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getJobList = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   console.log(`GET JOBS REQUEST: user=${userId}`);

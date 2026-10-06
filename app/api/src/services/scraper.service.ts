@@ -146,11 +146,13 @@ export const processScrapeJob = async (jobId: string) => {
       throw new Error(`Crawler returned ${leads.length} leads, but none could be saved for job ${jobId}`);
     }
 
-    // Update user leadsUsed
-    await prisma.user.update({
-      where: { id: job.userId },
-      data: { leadsUsed: { increment: leadsCount } },
-    });
+    // Only Google Maps leads consume the account's Google Maps quota.
+    if (job.scraper === 'GOOGLE_MAPS') {
+      await prisma.user.update({
+        where: { id: job.userId },
+        data: { leadsUsed: { increment: leadsCount } },
+      });
+    }
 
     await prisma.scrapeJob.update({
       where: { id: jobId },

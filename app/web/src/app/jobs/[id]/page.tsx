@@ -1,39 +1,49 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/ui/navbar';
 import { Button } from '@/components/ui/button';
-import { Download, ExternalLink, Shield, ShieldAlert, Mail, Globe } from 'lucide-react';
+import { Download, ExternalLink, Mail, Globe, Trash2 } from 'lucide-react';
 
 export default function JobResultsPage() {
   const { id } = useParams();
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
+
+  const fetchJob = useCallback(async () => {
+    const res = await api.get(`/jobs/${id}?page=${page}&pageSize=${pageSize}`);
+    setJob(res.data);
+    return res.data;
+  }, [id, page]);
 
   useEffect(() => {
-    const fetchJob = async () => {
+    let cancelled = false;
+    const load = async () => {
       try {
-        const res = await api.get(`/jobs/${id}`);
-        setJob(res.data);
-      } catch (err) {
-        console.error('Failed to fetch job results', err);
-      } finally {
+        const nextJob = await fetchJob();
+        if (cancelled) return;
         setLoading(false);
+        if (nextJob.status !== 'PROCESSING' && nextJob.status !== 'PENDING' && interval) {
+          clearInterval(interval);
+        }
+      } catch (err) {
+        if (!cancelled) console.error('Failed to fetch job results', err);
+        if (!cancelled) setLoading(false);
       }
     };
-    
-    fetchJob();
-    const interval = setInterval(async () => {
-      if (job?.status === 'PROCESSING' || job?.status === 'PENDING') {
-        const res = await api.get(`/jobs/${id}`);
-        setJob(res.data);
-      }
-    }, 3000);
+    const interval = setInterval(load, 3000);
 
-    return () => clearInterval(interval);
-  }, [id, job?.status]);
+    load();
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [fetchJob]);
 
   if (loading) return <div className="p-8 text-center text-gray-500">Loading results...</div>;
   if (!job) return <div className="p-8 text-center text-red-500">Job not found.</div>;
@@ -41,6 +51,18 @@ export default function JobResultsPage() {
   const handleExport = () => {
     const token = localStorage.getItem('token');
     window.location.href = `http://localhost:3001/api/jobs/${id}/export?token=${token}`;
+  };
+
+  const handleDelete = async () => {
+    if (job.status !== 'COMPLETED') return;
+    if (!window.confirm(`Delete the completed scrape for ${job.category} in ${job.city}? This cannot be undone.`)) return;
+
+    try {
+      await api.delete(`/jobs/${id}`);
+      window.location.href = '/dashboard';
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Could not delete this scrape');
+    }
   };
 
   return (
@@ -52,10 +74,23 @@ export default function JobResultsPage() {
             <h1 className="text-2xl font-bold text-gray-900">{job.category} in {job.city}</h1>
             <p className="text-sm text-gray-500">Status: <span className="font-semibold uppercase">{job.status}</span> · Source: <span className="font-semibold">{job.scraper === 'CRAWLEE' ? 'Crawlee' : 'Google Maps'}</span></p>
           </div>
-          <Button onClick={handleExport} disabled={job.status !== 'COMPLETED'}>
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleExport} disabled={job.status !== 'COMPLETED'}>
+              <Download className="w-4 h-4 mr-2" />
+              Export CSV
+            </Button>
+            {job.status === 'COMPLETED' && (
+              <Button
+                variant="ghost"
+                onClick={handleDelete}
+                className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                title="Delete completed scrape"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white shadow-sm rounded-xl border border-gray-100 overflow-hidden">
@@ -121,6 +156,18 @@ export default function JobResultsPage() {
               </div>
             )}
           </div>
+          {job.pagination?.pageCount > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+              <span className="text-sm text-gray-500">
+                Showing {(job.pagination.page - 1) * job.pagination.pageSize + 1}–{Math.min(job.pagination.page * job.pagination.pageSize, job.pagination.total)} of {job.pagination.total}
+              </span>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" disabled={page === 1} onClick={() => setPage((current) => current - 1)}>Previous</Button>
+                <span className="px-2 py-2 text-sm text-gray-500">Page {page} of {job.pagination.pageCount}</span>
+                <Button variant="ghost" size="sm" disabled={page === job.pagination.pageCount} onClick={() => setPage((current) => current + 1)}>Next</Button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

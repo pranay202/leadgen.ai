@@ -1,10 +1,12 @@
-# Go Gin + MongoDB Boilerplate — Walkthrough
+# OfflineBizFinder
 
-## One-command Docker deployment
+OfflineBizFinder helps you find local businesses, review their contact details, and export leads for outreach. You can search with Google Maps or use the Crawlee public-web scraper.
 
-The complete app is published as one image. The image includes the web app, API,
-PostgreSQL, migrations, and an Nginx reverse proxy, so a new server only needs
-Docker installed:
+## Start here
+
+The quickest way to run the complete app is Docker.
+
+### Option A: one container
 
 ```bash
 docker run -d --name leadgen \
@@ -15,168 +17,125 @@ docker run -d --name leadgen \
   ghcr.io/pranay202/leadgen.ai:latest
 ```
 
-Open `http://SERVER_IP/`. The database survives container replacement in the
-`leadgen-data` volume. Set `GOOGLE_MAPS_API_KEY` with another `-e` flag if the
-Google Maps scraper is needed; the Crawlee scraper works without it.
+Open [http://localhost/](http://localhost/) (or `http://SERVER_IP/` on a remote server).
 
-The `main` branch is built and pushed to GHCR automatically by
-`.github/workflows/publish-docker.yml`.
-
-## What Was Built
-
-A production-grade, fully scaffolded REST API in Go using **Gin** + **MongoDB**, following **Hexagonal Architecture** with a layered handler → service → repository pattern.
-
----
-
-## Complete File Tree
-
-```
-solartech.server/
-├── cmd/
-│   └── api/
-│       └── main.go                    # Entrypoint, DI wiring, graceful shutdown
-├── config/
-│   └── config.go                      # Type-safe env config loader
-├── internal/
-│   ├── domain/
-│   │   └── models.go                  # Pure domain entities (User, Role, RefreshToken)
-│   ├── ports/
-│   │   └── ports.go                   # Hexagonal interfaces (repositories + services)
-│   ├── adapters/
-│   │   ├── handlers/
-│   │   │   ├── auth_handler.go        # Auth HTTP handlers (register/login/refresh/logout/me)
-│   │   │   ├── user_handler.go        # User HTTP handlers (CRUD + role change)
-│   │   │   └── router.go             # Gin router, CORS, health, Swagger, RBAC wiring
-│   │   └── repositories/
-│   │       ├── user_repository.go     # MongoDB user repository
-│   │       ├── token_repository.go    # MongoDB refresh token repository
-│   │       └── role_repository.go     # MongoDB role repository
-│   ├── services/
-│   │   ├── auth_service.go            # Auth business logic (JWT, rotation, hashing)
-│   │   └── user_service.go           # User business logic (profile, role change)
-│   └── middleware/
-│       ├── auth.go                    # JWT Bearer auth + OptionalAuth + SelfOrRole
-│       ├── rbac.go                    # RequirePermission (DB) + RequireRole (JWT claim)
-│       ├── rate_limiter.go            # Per-IP token-bucket rate limiter
-│       └── logger.go                  # RequestID, structured Logger, Recovery
-├── pkg/
-│   ├── database/
-│   │   └── mongo.go                   # Connection pool, index setup, graceful disconnect
-│   ├── jwt/
-│   │   └── jwt.go                     # Dual-secret JWT (access + refresh)
-│   ├── crypto/
-│   │   └── password.go               # bcrypt hash + verify
-│   ├── logger/
-│   │   └── logger.go                  # Zap singleton with JSON/console modes
-│   ├── apperror/
-│   │   └── errors.go                  # Typed errors with HTTP status mapping
-│   └── response/
-│       └── response.go               # Unified JSON envelope helpers
-├── docs/
-│   └── swagger.go                     # Swaggo annotations entry file
-├── scripts/
-│   ├── seed/
-│   │   └── main.go                    # Idempotent DB seed (roles + admin user)
-│   └── mongo-init.js                  # MongoDB schema validation + app user creation
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml                  # GitHub Actions: lint → test → build → deploy
-├── .air.toml                          # Air hot-reload config
-├── .env.example                       # All env vars documented
-├── .gitignore
-├── .golangci.yml                      # golangci-lint config (15+ linters)
-├── Dockerfile                         # Multi-stage scratch image
-├── docker-compose.yml                 # API + MongoDB + optional Mongo Express
-└── Makefile                           # build/run/dev/test/lint/swagger/seed/docker
-```
-
----
-
-## Architecture Decisions
-
-### Hexagonal (Ports & Adapters)
-- **Ports** ([internal/ports/ports.go](file:///C:/Users/leado/Desktop/Projects/Client/solartech.server/internal/ports/ports.go)) define interfaces that both services and repositories implement. Business logic never imports Gin or MongoDB packages.
-- **Adapters** live in `internal/adapters/` — repositories talk to MongoDB, handlers talk to Gin. They can be swapped independently.
-
-### Two RBAC Strategies
-| Strategy | Middleware | Latency | Flexibility |
-|---|---|---|---|
-| Claim-based | `RequireRole("admin")` | Zero DB calls | Coarse-grained |
-| Permission-based | `RequirePermission(roleRepo, "users:export")` | One DB read | Fine-grained |
-
-### JWT Token Rotation
-Old refresh token is **deleted before** issuing a new one. If the same token is presented twice, the second caller gets 401. This detects token theft with single-use semantics.
-
-### MongoDB TTL Index
-`refresh_tokens.expires_at` has a `SetExpireAfterSeconds(0)` index — MongoDB's background job automatically purges expired tokens with no application code needed.
-
-### Error Strategy
-All errors flow through `pkg/apperror`. Each error carries:
-- `Kind` → HTTP status code mapping
-- `Code` → machine-readable string (e.g. `USER_NOT_FOUND`)
-- `Message` → safe human-readable client string
-- `Err` → internal root cause (never serialised to client)
-
----
-
-## How to Run Locally
+Google Maps searches also need an API key:
 
 ```bash
-# 1. Copy and fill environment variables
-cp .env.example .env
-
-# 2. Start MongoDB
-docker compose up -d mongo
-
-# 3. Install Go dependencies
-make tidy
-
-# 4. Seed roles and admin user
-make seed
-
-# 5a. Hot-reload (install air first: go install github.com/air-verse/air@latest)
-make dev
-
-# 5b. OR build and run
-make run
+-e GOOGLE_MAPS_API_KEY='your-google-maps-key'
 ```
 
-**Swagger UI** → http://localhost:8080/swagger/index.html  
-**Health check** → http://localhost:8080/health
+Crawlee searches do not need that key.
+
+### Option B: run the services locally
+
+You need Node.js 20+, Docker, and npm.
 
 ```bash
-# Generate / regenerate Swagger docs
-make swagger
+docker compose up -d db
 
-# Run with full Docker stack (API + Mongo)
-make docker-up
+cd app/api
+npm install
+npx prisma generate
+npx prisma migrate dev
+npm run dev
 ```
 
----
+In another terminal:
 
-## Key Endpoints
+```bash
+cd app/web
+npm install
+npm run dev
+```
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | `/api/v1/auth/register` | Public | Register new user |
-| POST | `/api/v1/auth/login` | Public | Login, get token pair |
-| POST | `/api/v1/auth/refresh` | Public | Rotate tokens |
-| POST | `/api/v1/auth/logout` | Bearer | Revoke refresh token |
-| GET  | `/api/v1/auth/me` | Bearer | Current user info |
-| GET  | `/api/v1/users` | Bearer + Admin | Paginated user list |
-| GET  | `/api/v1/users/:id` | Bearer + Self/Admin | Get user |
-| PATCH| `/api/v1/users/:id` | Bearer + Self/Admin | Update profile |
-| PUT  | `/api/v1/users/:id/role` | Bearer + Admin | Change role |
-| DELETE | `/api/v1/users/:id` | Bearer + Admin | Delete user |
-| GET  | `/health` | Public | Health check |
-| GET  | `/swagger/*` | Public | Swagger UI |
+Then open [http://localhost:3000/](http://localhost:3000/). The API runs on port `3001` and PostgreSQL runs on port `5432`.
 
----
+For local API configuration, set `DATABASE_URL`, `JWT_SECRET`, and, when using Google Maps, `GOOGLE_MAPS_API_KEY`. The Docker Compose defaults are already in `docker-compose.yml`.
 
-## Scalability Notes
+## Your first search
 
-1. **Connection Pooling**: `MaxPoolSize=100, MinPoolSize=10` in MongoDB opts — tune based on `mongotop` metrics.
-2. **Stateless Services**: No in-process state — horizontal scaling is `docker service scale api=N`.
-3. **Rate Limiting at Scale**: Replace the in-process `sync.Map` store with a Redis sliding window for cluster-wide limits.
-4. **RBAC Caching**: `RequirePermission` makes one DB read per request — add a short TTL cache (e.g. `sync.Map + TTL` or Redis) for roles in hot paths.
-5. **Config over Code**: All tunable parameters (pool sizes, TTLs, rate limits) come from env vars — zero binary changes needed for environment-specific tuning.
+1. Create an account with an email and a password of at least six characters.
+2. From the dashboard, choose **New Scrape**.
+3. Choose a scraper. Google Maps is structured and quota-based; Crawlee visits public business websites and does not use the Google Maps quota.
+4. Enter a city, a business category, and the number of leads you want.
+5. Choose **Start searching**. The results page updates while the job is running.
+6. When the job is complete, use **Export CSV** to download the list.
+
+![New scrape form](docs/screenshots/new-scrape.svg)
+
+Example: search for `Dentists` in `New York` with a limit of `25`.
+
+## Understanding the dashboard
+
+The dashboard shows your Google Maps usage, remaining quota, plan, and recent jobs. Open a completed job to review its business name, phone, email, owner, company size, revenue, website, domain age, and lead score.
+
+![Dashboard with completed jobs](docs/screenshots/dashboard.svg)
+
+Completed jobs can now be removed from either the dashboard or the results page. Deletion also removes the businesses stored under that job and cannot be undone. Jobs that are still pending or processing are intentionally not deletable.
+
+## Scraper choices and limits
+
+| Scraper | Best for | API key | Counts toward Google Maps quota |
+| --- | --- | --- | --- |
+| Google Maps | Structured local business results | Required | Yes |
+| Crawlee | Public-web discovery without a Maps key | Not required | No |
+
+Each scrape accepts between 1 and 1,000 leads. A new account starts with a 1,000-lead Google Maps allowance. The allowance is tracked separately from Crawlee usage.
+
+## Useful commands
+
+```bash
+# API
+cd app/api
+npm run build
+npm start
+
+# Web
+cd app/web
+npm run lint
+npm run build
+npm start
+
+# Stop local database
+docker compose down
+```
+
+The API health check is available at [http://localhost:3001/health](http://localhost:3001/health).
+
+## API overview
+
+All `/api/jobs` routes require a bearer token from login or signup.
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/auth/register` | Create an account |
+| `POST` | `/api/auth/login` | Sign in and receive a token |
+| `GET` | `/api/auth/me` | Read the current account |
+| `POST` | `/api/jobs` | Start a scrape |
+| `GET` | `/api/jobs` | List the signed-in user’s recent jobs |
+| `GET` | `/api/jobs/:id` | Read paginated job results |
+| `GET` | `/api/jobs/:id/export` | Download a completed job as CSV |
+| `DELETE` | `/api/jobs/:id` | Delete that user’s completed job |
+
+## Project layout
+
+```text
+app/
+├── api/                 Express API, Prisma schema, migrations, scrapers
+└── web/                 Next.js pages and UI components
+docker/                  Dockerfiles, Nginx, startup scripts
+docker-compose.yml       Local PostgreSQL + API + web services
+docs/screenshots/        README product screenshots
+```
+
+## Data and deployment notes
+
+- PostgreSQL data is kept in the `leadgen-data` Docker volume for the single-container deployment or `postgres_data` for Compose.
+- Set a long, unique `JWT_SECRET` before exposing the app to other users.
+- Google Maps credentials are optional only when using Crawlee.
+- Do not commit secrets or `.env` files.
+
+## License
+
+See [LICENSE](LICENSE).

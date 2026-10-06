@@ -7,8 +7,8 @@ export const exportJobCsv = async (req: Request, res: Response) => {
 
   try {
     const job = await prisma.scrapeJob.findUnique({
-      where: { id },
-      include: { businesses: true },
+      where: { id, userId: (req as any).userId },
+      include: { businesses: { orderBy: { createdAt: 'asc' } } },
     });
 
     if (!job) return res.status(404).json({ error: 'Job not found' });

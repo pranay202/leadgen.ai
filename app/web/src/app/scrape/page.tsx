@@ -15,7 +15,7 @@ export default function ScrapePage() {
   const router = useRouter();
   const [city, setCity] = useState('');
   const [category, setCategory] = useState('');
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(25);
   const [scraper, setScraper] = useState<ScraperType>('GOOGLE_MAPS');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -101,13 +101,15 @@ export default function ScrapePage() {
             </div>
             
             <Input
-              label="Lead Limit (up to 1,000)"
+              label="Lead Limit (up to 1,000 per scrape)"
               type="number"
               min={1}
               max={1000}
               value={limit}
               onChange={(e) => setLimit(Number(e.target.value) || 1)}
-              hint="Start small to validate a market, then expand your search."
+              hint={scraper === 'GOOGLE_MAPS'
+                ? 'Google Maps results count toward your account quota.'
+                : 'Crawlee scrapes public websites and does not use your Google Maps quota.'}
               required
             />
 
