@@ -1,6 +1,6 @@
 export const BRAND = {
   name: 'Leadgen.ai',
-  mark: 'L',
+  mark: '',
 } as const;
 
 type BrandProps = {
