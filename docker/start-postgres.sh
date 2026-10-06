@@ -10,7 +10,7 @@ if [ ! -s "$PGDATA/PG_VERSION" ]; then
     pg_ctl -D "$PGDATA" -o "-c listen_addresses=''" -w start
     
     psql --command "ALTER USER postgres WITH SUPERUSER PASSWORD 'postgres';"
-    psql --command "SELECT 'CREATE DATABASE offlinebizfinder OWNER postgres' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'offlinebizfinder')\gexec"
+    psql --command "SELECT 'CREATE DATABASE leadgen OWNER postgres' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'leadgen')\gexec"
     
     pg_ctl -D "$PGDATA" -m fast -w stop
 fi

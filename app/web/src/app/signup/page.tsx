@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Brand } from '@/components/ui/brand';
 import Link from 'next/link';
 import { ArrowRight, CheckCircle2, KeyRound, Mail } from 'lucide-react';
 
@@ -41,13 +42,13 @@ export default function SignupPage() {
     <div className="min-h-screen bg-slate-50 px-5 py-8 sm:px-8 lg:grid lg:grid-cols-2 lg:p-0">
       <section className="relative hidden overflow-hidden bg-slate-950 p-12 lg:flex lg:flex-col lg:justify-between">
         <div className="absolute -right-16 top-10 h-80 w-80 rounded-full bg-cyan-400/15 blur-3xl" />
-        <div className="relative"><div className="flex items-center gap-2 text-lg font-bold tracking-tight text-white"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400 text-slate-950">O</span>OfflineBizFinder</div>
+        <div className="relative"><Brand variant="light" compact />
           <div className="mt-28 max-w-md"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">Start discovering</p><h1 className="mt-5 text-4xl font-bold leading-tight tracking-tight text-white">A clearer path from local search to outreach.</h1>
           <ul className="mt-8 space-y-4 text-sm text-slate-300"><li className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-cyan-300" />Search the businesses that matter to you</li><li className="flex items-center gap-3"><CheckCircle2 className="h-5 w-5 text-cyan-300" />Keep every search organized in one place</li></ul></div></div>
         <p className="relative text-sm text-slate-400">Create your account in less than a minute.</p>
       </section>
       <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center lg:min-h-screen"><div className="w-full max-w-md">
-        <div className="mb-10 lg:hidden"><div className="text-xl font-bold tracking-tight text-slate-900"><span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-sm text-cyan-300">O</span>OfflineBizFinder</div></div>
+        <div className="mb-10 lg:hidden"><Brand /></div>
         <div className="mb-8"><p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">Get started</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Create your account</h2><p className="mt-2 text-sm text-slate-500">Your first local lead search is a few clicks away.</p></div>
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/70 sm:p-8">
           <form className="space-y-5" onSubmit={handleSignup}>

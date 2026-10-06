@@ -16,7 +16,7 @@ until pg_isready -h 127.0.0.1 -p 5432 -U postgres >/dev/null 2>&1; do
 done
 
 cd /app/api
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/offlinebizfinder?schema=public" npx prisma migrate deploy
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/leadgen?schema=public" npx prisma migrate deploy
 
 supervisorctl start api web nginx
 wait "$supervisord_pid"

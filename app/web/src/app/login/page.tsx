@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Brand } from '@/components/ui/brand';
 import Link from 'next/link';
 import { ArrowRight, KeyRound, Mail, Sparkles } from 'lucide-react';
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
         <div className="absolute -left-24 top-16 h-80 w-80 rounded-full bg-cyan-400/15 blur-3xl" />
         <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-blue-500/15 blur-3xl" />
         <div className="relative">
-          <div className="flex items-center gap-2 text-lg font-bold tracking-tight text-white"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-400 text-slate-950">O</span>OfflineBizFinder</div>
+          <Brand variant="light" compact />
           <div className="mt-28 max-w-md">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-cyan-200"><Sparkles className="h-3.5 w-3.5" /> Smarter local lead discovery</span>
             <h1 className="mt-6 text-4xl font-bold leading-tight tracking-tight text-white">Turn nearby businesses into your next best customers.</h1>
@@ -49,7 +50,7 @@ export default function LoginPage() {
 
       <main className="flex min-h-[calc(100vh-4rem)] items-center justify-center lg:min-h-screen">
         <div className="w-full max-w-md">
-          <div className="mb-10 lg:hidden"><div className="text-xl font-bold tracking-tight text-slate-900"><span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-sm text-cyan-300">O</span>OfflineBizFinder</div></div>
+          <div className="mb-10 lg:hidden"><Brand /></div>
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-700">Welcome back</p>
             <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900">Sign in to your workspace</h2>

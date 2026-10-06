@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { BRAND } from '@/components/ui/brand';
 
 export default function RootPage() {
   const router = useRouter();
@@ -15,5 +16,5 @@ export default function RootPage() {
     }
   }, [router]);
 
-  return <div className="flex min-h-screen items-center justify-center bg-slate-50 font-bold text-slate-900">OfflineBizFinder</div>;
+  return <div className="flex min-h-screen items-center justify-center bg-slate-50 font-bold text-slate-900">{BRAND.name}</div>;
 }

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Brand } from '@/components/ui/brand';
 import { LayoutDashboard, Search, LogOut } from 'lucide-react';
 
 export function Navbar() {
@@ -25,7 +26,7 @@ export function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <span className="text-lg font-bold tracking-tight text-slate-900"><span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 text-sm text-cyan-300">O</span>OfflineBizFinder</span>
+              <Brand />
             </div>
             <div className="hidden sm:-my-px sm:ml-8 sm:flex sm:space-x-8">
               {navItems.map((item) => {

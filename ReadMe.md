@@ -1,6 +1,6 @@
-# OfflineBizFinder
+# Leadgen.ai
 
-OfflineBizFinder helps you find local businesses, review their contact details, and export leads for outreach. You can search with Google Maps or use the Crawlee public-web scraper.
+Leadgen.ai helps you find local businesses, review their contact details, and export leads for outreach. You can search with Google Maps or use the Crawlee public-web scraper.
 
 ## Start here
 
