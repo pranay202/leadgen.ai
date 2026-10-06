@@ -2,17 +2,21 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { isAxiosError } from 'axios';
 import { api } from '@/lib/api';
 import { Navbar } from '@/components/ui/navbar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, MapPin, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Bot, Building2, Map, MapPin, Search, SlidersHorizontal, Sparkles } from 'lucide-react';
+
+type ScraperType = 'GOOGLE_MAPS' | 'CRAWLEE';
 
 export default function ScrapePage() {
   const router = useRouter();
   const [city, setCity] = useState('');
   const [category, setCategory] = useState('');
   const [limit, setLimit] = useState(10);
+  const [scraper, setScraper] = useState<ScraperType>('GOOGLE_MAPS');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,10 +26,11 @@ export default function ScrapePage() {
     setError('');
 
     try {
-      const response = await api.post('/jobs', { city, category, limit });
+      const response = await api.post('/jobs', { city, category, limit, scraper });
       router.push(`/jobs/${response.data.jobId}`);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to start scrape job');
+    } catch (err: unknown) {
+      const apiError = isAxiosError<{ error?: string }>(err) ? err.response?.data?.error : undefined;
+      setError(apiError || 'Failed to start scrape job');
     } finally {
       setLoading(false);
     }
@@ -45,6 +50,37 @@ export default function ScrapePage() {
           <div className="mb-7 flex items-center gap-3 border-b border-slate-100 pb-6"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-cyan-300"><SlidersHorizontal className="h-5 w-5" /></span><div><h2 className="font-bold text-slate-900">Search details</h2><p className="mt-0.5 text-sm text-slate-500">Set your market and search scope.</p></div></div>
           
           <form className="space-y-6" onSubmit={handleScrape}>
+            <fieldset className="space-y-3">
+              <legend className="text-sm font-semibold text-slate-700">Scraper</legend>
+              <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-cyan-700 shadow-sm">
+                    {scraper === 'CRAWLEE' ? <Bot className="h-5 w-5" /> : <Map className="h-5 w-5" />}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {scraper === 'CRAWLEE' ? 'Crawlee' : 'Google Maps'}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-slate-500">
+                      {scraper === 'CRAWLEE'
+                        ? 'Crawl public business websites without a Maps API key.'
+                        : 'Use Google Places for structured local business results.'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={scraper === 'CRAWLEE'}
+                  aria-label="Use Crawlee instead of Google Maps"
+                  onClick={() => setScraper((current) => current === 'GOOGLE_MAPS' ? 'CRAWLEE' : 'GOOGLE_MAPS')}
+                  className={`relative h-7 w-12 shrink-0 rounded-full transition-colors focus:outline-none focus:ring-4 focus:ring-cyan-500/20 ${scraper === 'CRAWLEE' ? 'bg-cyan-600' : 'bg-slate-300'}`}
+                >
+                  <span className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${scraper === 'CRAWLEE' ? 'left-6' : 'left-1'}`} />
+                </button>
+              </div>
+            </fieldset>
+
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <Input
                 label="City"

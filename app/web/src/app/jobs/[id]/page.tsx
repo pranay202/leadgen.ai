@@ -50,7 +50,7 @@ export default function JobResultsPage() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{job.category} in {job.city}</h1>
-            <p className="text-sm text-gray-500">Status: <span className="font-semibold uppercase">{job.status}</span></p>
+            <p className="text-sm text-gray-500">Status: <span className="font-semibold uppercase">{job.status}</span> · Source: <span className="font-semibold">{job.scraper === 'CRAWLEE' ? 'Crawlee' : 'Google Maps'}</span></p>
           </div>
           <Button onClick={handleExport} disabled={job.status !== 'COMPLETED'}>
             <Download className="w-4 h-4 mr-2" />

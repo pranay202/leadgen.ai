@@ -4,10 +4,21 @@ import { processScrapeJob } from '../services/scraper.service';
 
 export const createScrapeJob = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
-  const { city, category, limit } = req.body;
-  console.log(`CREATE JOB REQUEST: user=${userId}, city=${city}, category=${category}, limit=${limit}`);
+  const { city, category, scraper = 'GOOGLE_MAPS' } = req.body;
+  const limit = Number(req.body.limit);
+  console.log(`CREATE JOB REQUEST: user=${userId}, city=${city}, category=${category}, limit=${limit}, scraper=${scraper}`);
 
   try {
+    if (typeof city !== 'string' || !city.trim() || typeof category !== 'string' || !category.trim()) {
+      return res.status(400).json({ error: 'City and business category are required' });
+    }
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
+      return res.status(400).json({ error: 'Lead limit must be an integer between 1 and 1000' });
+    }
+    if (scraper !== 'GOOGLE_MAPS' && scraper !== 'CRAWLEE') {
+      return res.status(400).json({ error: 'Invalid scraper type' });
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       console.warn(`USER NOT FOUND: ${userId}`);
@@ -22,9 +33,10 @@ export const createScrapeJob = async (req: Request, res: Response) => {
     const job = await prisma.scrapeJob.create({
       data: {
         userId,
-        city,
-        category,
+        city: city.trim(),
+        category: category.trim(),
         limit,
+        scraper,
       },
     });
 

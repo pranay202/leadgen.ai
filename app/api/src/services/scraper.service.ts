@@ -10,6 +10,8 @@ export interface ScrapeResult {
   website?: string;
 }
 
+export type ScraperType = 'GOOGLE_MAPS' | 'CRAWLEE';
+
 export const scrapeGoogleMaps = async (
   city: string,
   category: string,
@@ -92,7 +94,9 @@ export const processScrapeJob = async (jobId: string) => {
       data: { status: 'PROCESSING' },
     });
 
-    const leads = await scrapeGoogleMaps(job.city, job.category, job.limit);
+    const leads = job.scraper === 'CRAWLEE'
+      ? await (await import('./crawlee-scraper.service')).scrapeWithCrawlee(job.city, job.category, job.limit)
+      : await scrapeGoogleMaps(job.city, job.category, job.limit);
     let leadsCount = 0;
 
     for (const lead of leads) {
@@ -134,8 +138,12 @@ export const processScrapeJob = async (jobId: string) => {
         });
         leadsCount++;
       } catch (err) {
-        console.warn(`Skipping duplicate lead: ${lead.name}`);
+        console.warn(`Could not save lead ${lead.name} for job ${jobId}:`, err);
       }
+    }
+
+    if (leads.length > 0 && leadsCount === 0) {
+      throw new Error(`Crawler returned ${leads.length} leads, but none could be saved for job ${jobId}`);
     }
 
     // Update user leadsUsed
@@ -156,4 +164,3 @@ export const processScrapeJob = async (jobId: string) => {
     });
   }
 };
-

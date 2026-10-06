@@ -31,9 +31,15 @@ model ScrapeJob {
   city       String
   category   String
   limit      Int
+  scraper    ScraperType @default(GOOGLE_MAPS)
   status     JobStatus  @default(PENDING)
   createdAt  DateTime   @default(now())
   businesses Business[]
+}
+
+enum ScraperType {
+  GOOGLE_MAPS
+  CRAWLEE
 }
 
 enum JobStatus {
@@ -59,5 +65,5 @@ model Business {
   score       Int       @default(0)
   createdAt   DateTime  @default(now())
 
-  @@unique([phone, website])
+  @@unique([scrapeJobId, phone, website])
 }
