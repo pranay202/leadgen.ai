@@ -101,7 +101,7 @@ export default function ScrapePage() {
             </div>
             
             <Input
-              label="Lead Limit (Max 1000)"
+              label="Lead Limit (up to 1,000)"
               type="number"
               min={1}
               max={1000}

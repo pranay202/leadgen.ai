@@ -15,7 +15,7 @@ async function main() {
             email: 'test@example.com',
             password: hashedPassword,
             plan: 'FREE',
-            leadsLimit: 100,
+            leadsLimit: 1000,
         },
     });
     console.log({ user });

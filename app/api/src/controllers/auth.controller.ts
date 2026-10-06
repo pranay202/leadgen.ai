@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import prisma from '../utils/prisma';
 import { z } from 'zod';
 
+const DEFAULT_LEADS_LIMIT = 1000;
+
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
@@ -30,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
       data: {
         email,
         password: hashedPassword,
-        leadsLimit: 100, // Default FREE plan
+        leadsLimit: DEFAULT_LEADS_LIMIT,
       },
     });
 

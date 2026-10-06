@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import prisma from '../utils/prisma';
 import { processScrapeJob } from '../services/scraper.service';
 
+export const MAX_SCRAPE_LIMIT = 1000;
+
 export const createScrapeJob = async (req: Request, res: Response) => {
   const userId = (req as any).userId;
   const { city, category, scraper = 'GOOGLE_MAPS' } = req.body;
@@ -12,8 +14,8 @@ export const createScrapeJob = async (req: Request, res: Response) => {
     if (typeof city !== 'string' || !city.trim() || typeof category !== 'string' || !category.trim()) {
       return res.status(400).json({ error: 'City and business category are required' });
     }
-    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) {
-      return res.status(400).json({ error: 'Lead limit must be an integer between 1 and 1000' });
+    if (!Number.isInteger(limit) || limit < 1 || limit > MAX_SCRAPE_LIMIT) {
+      return res.status(400).json({ error: `Lead limit must be an integer between 1 and ${MAX_SCRAPE_LIMIT}` });
     }
     if (scraper !== 'GOOGLE_MAPS' && scraper !== 'CRAWLEE') {
       return res.status(400).json({ error: 'Invalid scraper type' });
